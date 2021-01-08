@@ -2,6 +2,7 @@ module C = Concrete
 module S = Syntax
 module PP = PrettyPrint
 module N = Normalize
+open Printf
 
 (* Creates an AST from the concrete syntax.
  * Replaces variables with DeBrujin indices,
@@ -26,7 +27,7 @@ let rec run_program : C.program -> unit =
   let tl = {defined = Hashtbl.create 1; claimed = Hashtbl.create 1} in
   let rec go = function
   | [] -> ()
-  | d::ds -> print_endline (PP.string_of_decl d); run_decl tl d; go ds
+  | d::ds -> (* print_endline (PP.string_of_decl d);*) run_decl tl d; go ds
   in go
 and run_decl : top_level -> C.decl -> unit =
   fun tl -> function
@@ -44,7 +45,7 @@ and run_decl : top_level -> C.decl -> unit =
   | Define (s,t) ->
       if Hashtbl.mem tl.defined s
         then raise (ConversionError "already defined")
-        else match Hashtbl.find_opt tl.claimed s with
+        else (match Hashtbl.find_opt tl.claimed s with
           | Some ty' ->
               let t' = desugar_cterm tl [] t in
               (try (* print_endline (PP.string_of_cterm t'); *)
@@ -53,7 +54,20 @@ and run_decl : top_level -> C.decl -> unit =
                    Hashtbl.add tl.defined s (t',ty')
                with
               Typecheck.TypeError err -> raise (Typecheck.TypeError err));
-          | None -> raise (ConversionError "not claimed yet")
+          | None -> raise (ConversionError "not claimed yet"))
+  | Normalize t ->
+      let t' = desugar_cterm tl [] t in
+      (match t' with
+      | Synth t' -> 
+        (try let ty = Typecheck.synth [] 0 t' in
+             Typecheck.check0 (Synth t') ty;
+             print_endline (sprintf "normalize %s: %s"
+              (PP.string_of_cterm (Synth t'))
+              (PP.string_of_cterm (N.quote0 (N.normalize (Synth t')))))
+            with
+            | Typecheck.TypeError err -> raise (Typecheck.TypeError err)
+            | Normalize.NormError err -> raise (Normalize.NormError err))
+      | _ -> raise (ConversionError "can't determine a type, try adding an annotation"))
 and desugar_sterm : top_level -> string list -> C.term -> S.s_term =
   fun tl bindings t -> match t with
   | Univ -> Univ
@@ -73,9 +87,13 @@ and desugar_sterm : top_level -> string list -> C.term -> S.s_term =
       | Some (t',ty) -> Annot (t',ty)
       | None -> raise (ConversionError "unbound variable")))
   | App (t1, t2) -> App (desugar_sterm tl bindings t1, desugar_cterm tl bindings t2)
+  | Nat -> Nat
+  | IndNat (n, mot, base, step) -> IndNat (desugar_cterm tl bindings n, desugar_cterm tl bindings mot, desugar_cterm tl bindings base, desugar_cterm tl bindings step)
   | _ -> raise (ConversionError "couldn't convert concrete term")
 and desugar_cterm : top_level -> string list -> C.term -> S.c_term =
   fun tl bindings t -> match t with
   | Lambda (x,t') -> Lambda (desugar_cterm tl (x::bindings) t')
   | Sole -> Sole
+  | Zero -> Zero
+  | Add1 x -> Add1 (desugar_cterm tl bindings x)
   | _ -> Synth (desugar_sterm tl bindings t)

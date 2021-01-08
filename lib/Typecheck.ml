@@ -27,11 +27,15 @@ let rec s_subst : int -> s_term -> s_term -> s_term =
   | BVar j -> if i = j then r else BVar j
   | FVar x -> FVar x
   | App (e1, e2) -> App (s_subst i r e1, c_subst i r e2)
+  | Nat -> Nat
+  | IndNat (n, mot, base, step) -> IndNat (c_subst i r n, c_subst i r mot, c_subst i r base, c_subst i r step)
 and c_subst : int -> s_term -> c_term -> c_term =
-  fun i r e -> match e with
+  fun i r -> function
   | Synth e' -> Synth (s_subst i r e')
   | Lambda e' -> Lambda (c_subst (i+1) r e')
   | Sole -> Sole
+  | Zero -> Zero
+  | Add1 x -> Add1 (c_subst i r x)
 
 let rec synth : context -> int -> s_term -> value
   = fun ctx i -> function
@@ -57,6 +61,14 @@ let rec synth : context -> int -> s_term -> value
           check ctx i e2 ty1;
           ty2 (normalize e2)
       | _ -> raise (TypeError "expected Pi type"))
+    | Nat -> VUniv
+    | IndNat (n, mot, base, step) ->
+        check ctx i mot (VPi (VNat, fun _ -> VUniv));
+        let motV = normalize mot in
+        check ctx i base (vapp motV VZero);
+        check ctx i step (VPi (VNat, (fun l -> VPi (vapp motV l, fun _ -> vapp motV (VAdd1 l)))));
+        check ctx i n VNat;
+        (vapp motV (normalize n))
     | _ -> raise (TypeError "unreachable")
 and check : context -> int -> c_term -> value -> unit
   = fun ctx i e ty -> match (e, ty) with
@@ -68,5 +80,7 @@ and check : context -> int -> c_term -> value -> unit
     | (Lambda e', VPi (ty1, ty2)) ->
         check ((Local i, ty1)::ctx) (i+1) (c_subst 0 (FVar (Local i)) e') (ty2 (vfree (Local i)))
     | (Sole,VTrivial) -> ()
+    | (Zero, VNat) -> ()
+    | (Add1 x, VNat) -> check ctx i x VNat
     | _ -> raise (TypeError "type mismatch")
 and check0 e ty = check [] 0 e ty

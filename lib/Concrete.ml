@@ -2,6 +2,7 @@ type program = decl list
 and decl =
   | Claim of string * term
   | Define of string * term
+  | Normalize of term
 and term =
   | Univ
   | Pi of string * term * term
@@ -12,3 +13,11 @@ and term =
   | Lambda of string * term
   | App of term * term
   | Sole
+  | Nat
+  | Zero
+  | Add1 of term
+  | IndNat of term * term * term * term
+
+let rec convert_num n =
+  if n = 0 then Zero
+           else Add1 (convert_num (n-1))

@@ -1,0 +1,24 @@
+(claim z Nat)
+(define z (add1 (add1 zero)))
+
+(claim add (-> Nat (-> Nat Nat)))
+(define add
+  (lambda x
+    (lambda y
+      (ind-Nat x
+        (lambda k Nat)
+        y
+        (lambda x-1 (lambda ans (add1 ans)))))))
+
+(claim mult (-> Nat (-> Nat Nat)))
+(define mult
+  (lambda x
+    (lambda y
+      (ind-Nat x
+        (lambda k Nat)
+        zero
+        (lambda x-1 (lambda ans (add ans y)))))))
+
+(claim three Nat)
+(define three (add (add1 (add1 zero)) (add1 zero)))
+(normalize three)

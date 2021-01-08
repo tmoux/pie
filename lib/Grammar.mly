@@ -3,9 +3,11 @@
 %token L_PARENS
 %token R_PARENS
 %token <string> STRING
+%token <int> NUMBER
 
 %token CLAIM
 %token DEFINE
+%token NORMALIZE
 
 %token THE
 
@@ -18,6 +20,11 @@
 
 %token TRIVIAL
 %token SOLE
+
+%token NAT
+%token ZERO
+%token ADD1
+%token INDNAT
 
 %start <Concrete.program> prog
 %%
@@ -33,6 +40,8 @@ decl:
     { Claim (s, t) }
   | L_PARENS; DEFINE; s = STRING; t = term; R_PARENS
     { Define (s, t) }
+  | L_PARENS; NORMALIZE; t = term; R_PARENS
+    { Normalize t } 
 
 term:
   | U
@@ -53,6 +62,16 @@ term:
     { t }
   | SOLE
     { Sole }
+  | NAT
+    { Nat }
+  | ZERO
+    { Zero }
+  | L_PARENS; ADD1; t = term; R_PARENS
+    { Add1 t }
+  | L_PARENS; INDNAT; n = term; mot = term; base = term; step = term; R_PARENS
+    { IndNat (n, mot, base, step) }
+  | x = NUMBER
+    { convert_num x }
 
 appseq:
   | t1 = term; t2 = term;

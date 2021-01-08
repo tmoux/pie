@@ -19,11 +19,25 @@ let rec s_norm : value list -> s_term -> value =
       let e1' = s_norm env e1 in
       let e2' = c_norm env e2 in
       vapp e1' e2'
+  | Nat -> VNat
+  | IndNat (n, mot, base, step) ->
+     let motVal = c_norm env mot in
+     let baseVal = c_norm env base in
+     let stepVal = c_norm env step in
+     let rec recurse k = (match k with
+       | VZero -> baseVal
+       | VAdd1 x -> vapp (vapp stepVal x) (recurse x)
+       | VNeutral n -> VNeutral (NNatElim (n, motVal, baseVal, stepVal))
+       | _ -> raise (NormError "error ind-Nat")
+       )
+     in recurse (c_norm env n)
 and c_norm : value list -> c_term -> value =
   fun env -> function
   | Synth e -> s_norm env e
   | Lambda e -> VLambda (fun x -> c_norm (x::env) e)
   | Sole -> VSole
+  | Zero -> VZero
+  | Add1 x -> VAdd1 (c_norm env x)
 and vapp : value -> value -> value =
   fun v1 v2 -> match v1 with
   | VLambda f -> f v2
@@ -39,10 +53,15 @@ let rec quote : int -> value -> c_term =
   | VNeutral n -> Synth (quoteNeutral i n)
   | VTrivial -> Synth Trivial
   | VSole -> Sole
+  | VNat -> Synth Nat
+  | VZero -> Zero
+  | VAdd1 x -> Add1 (quote i x)
 and quoteNeutral : int -> neutral -> s_term =
   fun i -> function
   | NFree x -> boundfree i x
   | NApp (n, v) -> App (quoteNeutral i n, quote i v)
+  | NNatElim (n, mot, base, step) ->
+      IndNat (Synth (quoteNeutral i n), quote i mot, quote i base, quote i step)
 and boundfree : int -> name -> s_term =
   fun i -> function
   | Quote k -> BVar (k-i-1)

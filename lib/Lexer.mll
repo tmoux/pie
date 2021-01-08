@@ -20,12 +20,17 @@ let keywords =
   make_table 0 [
     ("claim", CLAIM);
     ("define", DEFINE);
+    ("normalize", NORMALIZE);
     ("the", THE);
     ("U", U);
     ("Pi", PI);
     ("lambda", LAMBDA);
     ("Trivial", TRIVIAL);
     ("sole", SOLE);
+    ("Nat", NAT);
+    ("zero", ZERO);
+    ("add1", ADD1);
+    ("ind-Nat", INDNAT);
   ]
 }
 
@@ -51,6 +56,8 @@ rule token = parse
     { token lexbuf }
   | eof
     { EOF }
+  | number
+    { NUMBER (int_of_string (Lexing.lexeme lexbuf)) }
   | atom
     {
       let input = lexeme lexbuf in

@@ -20,10 +20,14 @@ type s_term =
   | BVar of int
   | FVar of name
   | App of s_term * c_term
+  | Nat
+  | IndNat of c_term * c_term * c_term * c_term
 and c_term =
   | Synth of s_term
   | Lambda of c_term
   | Sole
+  | Zero
+  | Add1 of c_term
 
 (* Values *)
 type value =
@@ -33,7 +37,10 @@ type value =
   | VNeutral of neutral
   | VTrivial
   | VSole
+  | VNat
+  | VZero
+  | VAdd1 of value
 and neutral =
   | NFree of name
   | NApp of neutral * value
-
+  | NNatElim of neutral * value * value * value
