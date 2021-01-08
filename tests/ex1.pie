@@ -1,0 +1,23 @@
+(claim abc Trivial)
+(define abc sole)
+
+(claim f (-> Trivial Trivial))
+(define f (lambda x x))
+
+(claim s Trivial)
+(define s (f abc))
+
+(claim const (-> Trivial (-> Trivial Trivial)))
+(define const (lambda x (lambda y x)))
+
+(claim snd (-> Trivial (-> Trivial Trivial)))
+(define snd (lambda x f))
+
+(claim app (-> (-> Trivial Trivial) (-> Trivial Trivial)))
+(define app (lambda f (lambda x (f x))))
+
+(claim id (Pi (A U) (-> A A)))
+(define id (lambda A (lambda x x)))
+
+(claim idTriv (-> Trivial Trivial))
+(define idTriv (lambda x ((id Trivial) x)))

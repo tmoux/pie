@@ -1,0 +1,9 @@
+(menhir
+ (flags --explain --interpret-show-cst --table)
+ (modules Grammar))
+
+(ocamllex Lexer)
+(library
+  (name lib)
+  (libraries menhirLib)
+)

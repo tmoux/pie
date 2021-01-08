@@ -1,0 +1,8 @@
+(claim a1 ((the (-> U U) (lambda T (-> Trivial T))) Trivial))
+(define a1 (lambda x x))
+
+(claim a2 (-> Trivial Trivial))
+(define a2 (lambda x x))
+
+(claim a3 (-> (-> Trivial Trivial) (-> Trivial Trivial)))
+(define a3 (lambda f f))
