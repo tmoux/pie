@@ -33,6 +33,11 @@ let keywords =
     ("ind-Nat", INDNAT);
     ("same", SAME);
     ("symm", SYMM);
+    ("Sigma", SIGMA);
+    ("Pair", PAIR);
+    ("cons", CONS);
+    ("car", CAR);
+    ("cdr", CDR);
   ]
 }
 

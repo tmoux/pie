@@ -1,0 +1,25 @@
+(claim add (-> Nat (-> Nat Nat)))
+(define add
+  (lambda x
+    (lambda y
+      (ind-Nat x
+        (lambda k Nat)
+        y
+        (lambda x-1 (lambda ans (add1 ans)))))))
+
+(claim ipair (Pair Nat Nat))
+(define ipair (cons 3 5))
+
+(claim three Nat)
+(define three (cdr ipair))
+
+(claim Even (-> Nat U))
+(define Even 
+  (lambda x 
+    (Sigma (y Nat) (= Nat x (add y y)))))
+
+(claim zero-is-even (Even 0))
+(define zero-is-even (cons 0 (same 0)))
+
+(claim f (Sigma (x Nat) (= Nat x 5)))
+(define f (cons 5 (same 5)))

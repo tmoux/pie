@@ -91,6 +91,10 @@ and desugar_sterm : top_level -> string list -> C.term -> S.s_term =
   | IndNat (n, mot, base, step) -> IndNat (desugar_cterm tl bindings n, desugar_cterm tl bindings mot, desugar_cterm tl bindings base, desugar_cterm tl bindings step)
   | Equal (ty, e1, e2) -> Equal (desugar_cterm tl bindings ty, desugar_cterm tl bindings e1, desugar_cterm tl bindings e2)
   | Symm e -> Symm (desugar_sterm tl bindings e)
+  | Sigma (x, t1, t2) -> Sigma (desugar_cterm tl bindings t1, desugar_cterm tl (x::bindings) t2)
+  | Pair (t1, t2) -> Sigma (desugar_cterm tl bindings t1, desugar_cterm tl ("_"::bindings) t2)
+  | Car e -> Car (desugar_sterm tl bindings e)
+  | Cdr e -> Cdr (desugar_sterm tl bindings e)
   | _ -> raise (ConversionError "couldn't convert concrete term")
 and desugar_cterm : top_level -> string list -> C.term -> S.c_term =
   fun tl bindings t -> match t with
@@ -99,4 +103,5 @@ and desugar_cterm : top_level -> string list -> C.term -> S.c_term =
   | Zero -> Zero
   | Add1 x -> Add1 (desugar_cterm tl bindings x)
   | Same x -> Same (desugar_cterm tl bindings x)
+  | Cons (e1, e2) -> Cons (desugar_cterm tl bindings e1, desugar_cterm tl bindings e2)
   | _ -> Synth (desugar_sterm tl bindings t)

@@ -31,6 +31,9 @@ let rec s_subst : int -> s_term -> s_term -> s_term =
   | IndNat (n, mot, base, step) -> IndNat (c_subst i r n, c_subst i r mot, c_subst i r base, c_subst i r step)
   | Equal (ty, e1, e2) -> Equal (c_subst i r ty, c_subst i r e1, c_subst i r e2)
   | Symm e -> Symm (s_subst i r e)
+  | Sigma (t1, t2) -> Sigma (c_subst i r t1, c_subst (i+1) r t2)
+  | Car e -> Car (s_subst i r e)
+  | Cdr e -> Cdr (s_subst i r e)
 and c_subst : int -> s_term -> c_term -> c_term =
   fun i r -> function
   | Synth e' -> Synth (s_subst i r e')
@@ -39,6 +42,7 @@ and c_subst : int -> s_term -> c_term -> c_term =
   | Zero -> Zero
   | Add1 x -> Add1 (c_subst i r x)
   | Same e -> Same (c_subst i r e)
+  | Cons (e1, e2) -> Cons (c_subst i r e1, c_subst i r e2)
 
 let rec synth : context -> int -> s_term -> value
   = fun ctx i -> function
@@ -82,6 +86,22 @@ let rec synth : context -> int -> s_term -> value
         (match synth ctx i e with
         | VEqual (ty, e1, e2) -> VEqual (ty, e2, e1)
         | _ -> raise (TypeError "not an = type"))
+    | Sigma (t1, t2) ->
+        check ctx i t1 VUniv;
+        let t1' = normalize t1 in
+        check ((Local i, t1')::ctx) (i+1) (c_subst 0 (FVar (Local i)) t2) VUniv;
+        VUniv
+    | Car e ->
+        (match synth ctx i e with
+        | VSigma (t1, _) -> t1
+        | _ -> raise (TypeError "car: expression is not a Sigma type"))
+    | Cdr e ->
+        (match synth ctx i e with
+        | VSigma (_, t2) ->
+            (match normalize (Synth e) with
+             | VCons (v1, _) -> t2 v1
+             | _ -> raise (TypeError "evaluating pair"))
+        | _ -> raise (TypeError "car: expression is not a Sigma type"))
     | _ -> raise (TypeError "unreachable")
 and check : context -> int -> c_term -> value -> unit
   = fun ctx i e ty -> match (e, ty) with
@@ -100,6 +120,11 @@ and check : context -> int -> c_term -> value -> unit
         let x' = normalize x in
         if quote0 x' = quote0 e1 && quote0 x' = quote0 e2
           then ()
-          else raise (TypeError "type mismatch: same")
+          else raise (TypeError (Printf.sprintf "type mismatch: same\n%s\n%s" (string_of_cterm (quote0 e1)) (string_of_cterm (quote0 e2))))
+    | (Cons (e1, e2), VSigma (v1, v2)) ->
+        check ctx i e1 v1;
+        let e1' = normalize e1 in
+        (* print_endline (string_of_cterm (quote0 (v2 e1'))); *)
+        check ((Local i, e1')::ctx) (i+1) (c_subst 0 (FVar (Local i)) e2) (v2 e1')
     | _ -> raise (TypeError "type mismatch")
 and check0 e ty = check [] 0 e ty

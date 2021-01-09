@@ -33,6 +33,20 @@ let rec s_norm : value list -> s_term -> value =
      in recurse (c_norm env n)
   | Equal (ty, e1, e2) -> VEqual (c_norm env ty, c_norm env e1, c_norm env e2)
   | Symm e -> s_norm env e
+  | Sigma (t1, t2) ->
+      let t1' = c_norm env t1 in
+      let t2' = fun x -> c_norm (x::env) t2 in
+      VSigma (t1', t2')
+  (* Probably need to add Neutral case for these eliminators *)
+  | Car e ->
+      (match s_norm env e with
+      | VCons (e1, _) -> e1
+      | _ -> raise (NormError "car: not a pair"))
+  | Cdr e ->
+      (match s_norm env e with
+      | VCons (_, e2) -> e2
+      | _ -> raise (NormError "car: not a pair"))
+
 and c_norm : value list -> c_term -> value =
   fun env -> function
   | Synth e -> s_norm env e
@@ -41,6 +55,7 @@ and c_norm : value list -> c_term -> value =
   | Zero -> VZero
   | Add1 x -> VAdd1 (c_norm env x)
   | Same x -> VSame (c_norm env x)
+  | Cons (e1, e2) -> VCons (c_norm env e1, c_norm env e2)
 and vapp : value -> value -> value =
   fun v1 v2 -> match v1 with
   | VLambda f -> f v2
@@ -61,6 +76,8 @@ let rec quote : int -> value -> c_term =
   | VAdd1 x -> Add1 (quote i x)
   | VEqual (ty, v1, v2) -> Synth (Equal (quote i ty, quote i v1, quote i v2))
   | VSame v -> Same (quote i v)
+  | VSigma (v1, v2) -> Synth (Sigma (quote i v1, quote (i+1) (v2 (vfree (Quote i)))))
+  | VCons (v1, v2) -> Cons (quote i v1, quote i v2)
 and quoteNeutral : int -> neutral -> s_term =
   fun i -> function
   | NFree x -> boundfree i x

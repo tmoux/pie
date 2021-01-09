@@ -30,6 +30,12 @@
 %token SAME
 %token SYMM
 
+%token SIGMA
+%token PAIR
+%token CONS
+%token CAR
+%token CDR
+
 %start <Concrete.program> prog
 %%
 
@@ -82,6 +88,16 @@ term:
     { Same x }
   | L_PARENS; SYMM; x = term; R_PARENS
     { Symm x }
+  | L_PARENS; SIGMA; L_PARENS; x = STRING; t1 = term; R_PARENS; t2 = term; R_PARENS;
+    { Sigma (x, t1, t2) }
+  | L_PARENS; PAIR; t1 = term; t2 = term; R_PARENS;
+    { Pair (t1, t2) }
+  | L_PARENS; CONS; t1 = term; t2 = term; R_PARENS;
+    { Cons (t1, t2) }
+  | L_PARENS; CAR; t = term; R_PARENS;
+    { Car t }
+  | L_PARENS; CDR; t = term; R_PARENS;
+    { Cdr t }
 
 appseq:
   | t1 = term; t2 = term;

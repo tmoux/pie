@@ -24,7 +24,10 @@ type s_term =
   | IndNat of c_term * c_term * c_term * c_term
   | Equal of c_term * c_term * c_term
   | Symm of s_term
-           
+  | Sigma of c_term * c_term
+  | Car of s_term
+  | Cdr of s_term
+
 and c_term =
   | Synth of s_term
   | Lambda of c_term
@@ -32,6 +35,7 @@ and c_term =
   | Zero
   | Add1 of c_term
   | Same of c_term
+  | Cons of c_term * c_term
 
 (* Values *)
 type value =
@@ -46,6 +50,8 @@ type value =
   | VAdd1 of value
   | VEqual of value * value * value
   | VSame of value
+  | VSigma of value * (value -> value)
+  | VCons of value * value
 and neutral =
   | NFree of name
   | NApp of neutral * value

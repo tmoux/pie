@@ -39,6 +39,7 @@ let rec string_of_cterm : S.c_term -> string = function
                 then (string_of_int (term_to_decimal (S.Add1 x)))
                 else sprintf "(add1 %s)" (string_of_cterm x)
   | S.Same x -> sprintf "(same %s)" (string_of_cterm x)
+  | S.Cons (e1, e2) -> sprintf "(cons %s %s)" (string_of_cterm e1) (string_of_cterm e2)
 and string_of_sterm : S.s_term -> string = function
   | S.Univ -> "U"
   | S.Pi (t1, t2) -> sprintf "(Pi %s %s)" (string_of_cterm t1) (string_of_cterm t2)
@@ -51,6 +52,9 @@ and string_of_sterm : S.s_term -> string = function
   | S.IndNat (n, mot, base, step) -> sprintf "(ind-Nat %s %s %s %s)" (string_of_cterm n) (string_of_cterm mot) (string_of_cterm base) (string_of_cterm step)
   | S.Equal (ty, e1, e2) -> sprintf "(= %s %s %s)" (string_of_cterm ty) (string_of_cterm e1) (string_of_cterm e2)
   | S.Symm e -> sprintf "(same %s)" (string_of_sterm e)
+  | S.Sigma (t1, t2) -> sprintf "(Sigma %s %s)" (string_of_cterm t1) (string_of_cterm t2)
+  | S.Car e -> sprintf "(car %s)" (string_of_sterm e)
+  | S.Cdr e -> sprintf "(cdr %s)" (string_of_sterm e)
 and string_of_name n = match n with
   | Global s -> s
   | Local x -> sprintf "local %d" x
