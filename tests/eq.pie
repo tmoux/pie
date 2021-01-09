@@ -1,0 +1,11 @@
+(claim eq4 (= Nat 4 4))
+(define eq4 (same 4))
+
+(claim eq-fact (Pi (x Nat) (Pi (y Nat) (-> (= Nat x y) (= Nat y x)))))
+(define eq-fact
+  (lambda x
+    (lambda y
+      (lambda p
+        (symm p)))))
+
+(normalize eq-fact)

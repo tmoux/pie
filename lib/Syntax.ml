@@ -22,12 +22,16 @@ type s_term =
   | App of s_term * c_term
   | Nat
   | IndNat of c_term * c_term * c_term * c_term
+  | Equal of c_term * c_term * c_term
+  | Symm of s_term
+           
 and c_term =
   | Synth of s_term
   | Lambda of c_term
   | Sole
   | Zero
   | Add1 of c_term
+  | Same of c_term
 
 (* Values *)
 type value =
@@ -40,6 +44,8 @@ type value =
   | VNat
   | VZero
   | VAdd1 of value
+  | VEqual of value * value * value
+  | VSame of value
 and neutral =
   | NFree of name
   | NApp of neutral * value

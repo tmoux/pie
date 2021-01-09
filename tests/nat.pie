@@ -22,3 +22,7 @@
 (claim three Nat)
 (define three (add (add1 (add1 zero)) (add1 zero)))
 (normalize three)
+
+(claim two-plus-two-is-four (= Nat (add 2 2) 4))
+(define two-plus-two-is-four (same 4))
+(normalize two-plus-two-is-four)

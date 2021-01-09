@@ -17,6 +17,9 @@ and term =
   | Zero
   | Add1 of term
   | IndNat of term * term * term * term
+  | Equal of term * term * term
+  | Same of term
+  | Symm of term
 
 let rec convert_num n =
   if n = 0 then Zero

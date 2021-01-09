@@ -31,6 +31,8 @@ let keywords =
     ("zero", ZERO);
     ("add1", ADD1);
     ("ind-Nat", INDNAT);
+    ("same", SAME);
+    ("symm", SYMM);
   ]
 }
 
@@ -50,6 +52,8 @@ rule token = parse
     { R_PARENS }
   | "->"
     { ARROW }
+  | "="
+    { EQUALS }
   | line_ending
     { new_line lexbuf; token lexbuf }
   | whitespace

@@ -4,6 +4,7 @@ open Printf
 
 exception PPError of string
 
+(* 
 let rec string_of_prog p = match p with
   | [] -> ""
   | [d] -> string_of_decl d
@@ -27,6 +28,7 @@ and string_of_term t = match t with
   | C.Zero -> "zero"
   | C.Add1 x -> sprintf "(add1 %s)" (string_of_term x)
   | C.IndNat (n, mot, base, step) -> sprintf "(ind-Nat %s %s %s %s)" (string_of_term n) (string_of_term mot) (string_of_term base) (string_of_term step)
+*)
 
 let rec string_of_cterm : S.c_term -> string = function
   | S.Synth e -> string_of_sterm e
@@ -36,6 +38,7 @@ let rec string_of_cterm : S.c_term -> string = function
   | S.Add1 x -> if (is_number (S.Add1 x))
                 then (string_of_int (term_to_decimal (S.Add1 x)))
                 else sprintf "(add1 %s)" (string_of_cterm x)
+  | S.Same x -> sprintf "(same %s)" (string_of_cterm x)
 and string_of_sterm : S.s_term -> string = function
   | S.Univ -> "U"
   | S.Pi (t1, t2) -> sprintf "(Pi %s %s)" (string_of_cterm t1) (string_of_cterm t2)
@@ -46,6 +49,8 @@ and string_of_sterm : S.s_term -> string = function
   | S.App (e1, e2) -> sprintf "(%s %s)" (string_of_sterm e1) (string_of_cterm e2)
   | S.Nat -> "Nat"
   | S.IndNat (n, mot, base, step) -> sprintf "(ind-Nat %s %s %s %s)" (string_of_cterm n) (string_of_cterm mot) (string_of_cterm base) (string_of_cterm step)
+  | S.Equal (ty, e1, e2) -> sprintf "(= %s %s %s)" (string_of_cterm ty) (string_of_cterm e1) (string_of_cterm e2)
+  | S.Symm e -> sprintf "(same %s)" (string_of_sterm e)
 and string_of_name n = match n with
   | Global s -> s
   | Local x -> sprintf "local %d" x

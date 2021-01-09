@@ -61,7 +61,7 @@ and run_decl : top_level -> C.decl -> unit =
       | Synth t' -> 
         (try let ty = Typecheck.synth [] 0 t' in
              Typecheck.check0 (Synth t') ty;
-             print_endline (sprintf "normalize %s: %s"
+             print_endline (sprintf "normalize %s:\n%s"
               (PP.string_of_cterm (Synth t'))
               (PP.string_of_cterm (N.quote0 (N.normalize (Synth t')))))
             with
@@ -89,6 +89,8 @@ and desugar_sterm : top_level -> string list -> C.term -> S.s_term =
   | App (t1, t2) -> App (desugar_sterm tl bindings t1, desugar_cterm tl bindings t2)
   | Nat -> Nat
   | IndNat (n, mot, base, step) -> IndNat (desugar_cterm tl bindings n, desugar_cterm tl bindings mot, desugar_cterm tl bindings base, desugar_cterm tl bindings step)
+  | Equal (ty, e1, e2) -> Equal (desugar_cterm tl bindings ty, desugar_cterm tl bindings e1, desugar_cterm tl bindings e2)
+  | Symm e -> Symm (desugar_sterm tl bindings e)
   | _ -> raise (ConversionError "couldn't convert concrete term")
 and desugar_cterm : top_level -> string list -> C.term -> S.c_term =
   fun tl bindings t -> match t with
@@ -96,4 +98,5 @@ and desugar_cterm : top_level -> string list -> C.term -> S.c_term =
   | Sole -> Sole
   | Zero -> Zero
   | Add1 x -> Add1 (desugar_cterm tl bindings x)
+  | Same x -> Same (desugar_cterm tl bindings x)
   | _ -> Synth (desugar_sterm tl bindings t)

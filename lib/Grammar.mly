@@ -26,6 +26,10 @@
 %token ADD1
 %token INDNAT
 
+%token EQUALS
+%token SAME
+%token SYMM
+
 %start <Concrete.program> prog
 %%
 
@@ -72,6 +76,12 @@ term:
     { IndNat (n, mot, base, step) }
   | x = NUMBER
     { convert_num x }
+  | L_PARENS; EQUALS; ty = term; e1 = term; e2 = term; R_PARENS
+    { Equal (ty, e1, e2) }
+  | L_PARENS; SAME; x = term; R_PARENS
+    { Same x }
+  | L_PARENS; SYMM; x = term; R_PARENS
+    { Symm x }
 
 appseq:
   | t1 = term; t2 = term;

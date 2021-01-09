@@ -29,6 +29,8 @@ let rec s_subst : int -> s_term -> s_term -> s_term =
   | App (e1, e2) -> App (s_subst i r e1, c_subst i r e2)
   | Nat -> Nat
   | IndNat (n, mot, base, step) -> IndNat (c_subst i r n, c_subst i r mot, c_subst i r base, c_subst i r step)
+  | Equal (ty, e1, e2) -> Equal (c_subst i r ty, c_subst i r e1, c_subst i r e2)
+  | Symm e -> Symm (s_subst i r e)
 and c_subst : int -> s_term -> c_term -> c_term =
   fun i r -> function
   | Synth e' -> Synth (s_subst i r e')
@@ -36,6 +38,7 @@ and c_subst : int -> s_term -> c_term -> c_term =
   | Sole -> Sole
   | Zero -> Zero
   | Add1 x -> Add1 (c_subst i r x)
+  | Same e -> Same (c_subst i r e)
 
 let rec synth : context -> int -> s_term -> value
   = fun ctx i -> function
@@ -69,6 +72,16 @@ let rec synth : context -> int -> s_term -> value
         check ctx i step (VPi (VNat, (fun l -> VPi (vapp motV l, fun _ -> vapp motV (VAdd1 l)))));
         check ctx i n VNat;
         (vapp motV (normalize n))
+    | Equal (ty, e1, e2) ->
+        check ctx i ty VUniv;
+        let ty' = normalize ty in
+        check ctx i e1 ty';
+        check ctx i e2 ty';
+        VUniv
+    | Symm e ->
+        (match synth ctx i e with
+        | VEqual (ty, e1, e2) -> VEqual (ty, e2, e1)
+        | _ -> raise (TypeError "not an = type"))
     | _ -> raise (TypeError "unreachable")
 and check : context -> int -> c_term -> value -> unit
   = fun ctx i e ty -> match (e, ty) with
@@ -82,5 +95,11 @@ and check : context -> int -> c_term -> value -> unit
     | (Sole,VTrivial) -> ()
     | (Zero, VNat) -> ()
     | (Add1 x, VNat) -> check ctx i x VNat
+    | (Same x, VEqual (ty, e1, e2)) ->
+        check ctx i x ty;
+        let x' = normalize x in
+        if quote0 x' = quote0 e1 && quote0 x' = quote0 e2
+          then ()
+          else raise (TypeError "type mismatch: same")
     | _ -> raise (TypeError "type mismatch")
 and check0 e ty = check [] 0 e ty
